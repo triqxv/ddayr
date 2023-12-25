@@ -1,130 +1,47 @@
--- Create a ScreenGui to hold the UI
-local gui = Instance.new("ScreenGui")
-gui.Parent = game.Players.LocalPlayer.PlayerGui
+-- DAC's Roblox Lua script for ESP (Extra Sensory Perception)
 
--- Create a Frame as the main UI container
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 200)
-frame.Position = UDim2.new(0.5, -150, 0.5, -100)
-frame.BackgroundColor3 = Color3.new(0, 0, 0)
-frame.BorderSizePixel = 0
-frame.Parent = gui
+local Players = game:GetService("Players")
+local Camera = game:GetService("Workspace").CurrentCamera
 
--- Create a TextLabel for the title
-local title = Instance.new("TextLabel")
-title.Text = "EpicMods | D'day"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.TextSize = 18
-title.Size = UDim2.new(1, 0, 0, 20)
-title.Position = UDim2.new(0, 0, 0, 0)
-title.Parent = frame
-
--- Create buttons
-local button1 = Instance.new("TextButton")
-button1.Text = "Trigger Bot"
-button1.Size = UDim2.new(1, 0, 0, 40)
-button1.Position = UDim2.new(0, 0, 0, 40)
-button1.BackgroundColor3 = Color3.new(0.91, 0.12, 0.39)
-button1.TextColor3 = Color3.new(1, 1, 1)
-button1.Parent = frame
-
-local button2 = Instance.new("TextButton")
-button2.Text = "Esp"
-button2.Size = UDim2.new(1, 0, 0, 40)
-button2.Position = UDim2.new(0, 0, 0, 80)
-button2.BackgroundColor3 = Color3.new(0.91, 0.3, 0.24)
-button2.TextColor3 = Color3.new(1, 1, 1)
-button2.Parent = frame
-
-local button3 = Instance.new("TextButton")
-button3.Text = "Join Discord Server"
-button3.Size = UDim2.new(1, 0, 0, 40)
-button3.Position = UDim2.new(0, 0, 0, 120)
-button3.BackgroundColor3 = Color3.new(0.21, 0.59, 0.91)
-button3.TextColor3 = Color3.new(1, 1, 1)
-button3.Parent = frame
-
--- Create a TextLabel for the footer
-local footer = Instance.new("TextLabel")
-footer.Text = "Provided By jude | All rights reserved by EpicMods © 2024"
-footer.TextColor3 = Color3.new(1, 1, 1)
-footer.TextSize = 12
-footer.Size = UDim2.new(1, 0, 0, 20)
-footer.Position = UDim2.new(0, 0, 1, -20)
-footer.Parent = frame
-
--- Handling button clicks
-button1.MouseButton1Click:Connect(function()
-    -- Trigger Bot Lua Script
-    local triggerBotFOV = math.huge
-    local shootProbability = 76
-
-    local function isPlayerInFOV(player)
-        return true
-    end
-
-    local function shoot()
-        print("Shooting!")
-    end
-
-    while true do
-        for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-            if player ~= game:GetService("Players").LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-                if isPlayerInFOV(player) and math.random(100) <= shootProbability then
-                    shoot()
-                end
-            end
+local function createESP(player)
+    local ESP = Drawing.new("Text")
+    ESP.Text = player.Name
+    ESP.Size = 20
+    ESP.Color = Color3.fromRGB(255, 0, 0) -- You can customize the color here
+    ESP.Position = Vector2.new(0, 0)
+    
+    -- Update ESP position every frame
+    game:GetService("RunService").RenderStepped:Connect(function()
+        local playerCharacter = player.Character
+        if playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
+            local screenPosition = Camera:WorldToViewportPoint(playerCharacter.HumanoidRootPart.Position)
+            ESP.Position = Vector2.new(screenPosition.X, screenPosition.Y)
+            ESP.Visible = true
+        else
+            ESP.Visible = false
         end
-        wait(0.1)
+    end)
+    
+    return ESP
+end
+
+local function updateESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            createESP(player)
+        end
     end
+end
+
+-- Initial update
+updateESP()
+
+-- Update ESP whenever a new player joins
+Players.PlayerAdded:Connect(function(player)
+    updateESP()
 end)
 
-button2.MouseButton1Click:Connect(function()
-    -- ESP Lua Script
-    local espFOV = 90
-    local espLineColor = Color3.new(1, 0, 0)
-
-    local function isPlayerInESPFOV(player)
-        local localPlayer = game:GetService("Players").LocalPlayer
-        local camera = workspace.CurrentCamera
-        local playerPosition = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
-        local localPlayerPosition = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character.HumanoidRootPart.Position
-        if playerPosition and localPlayerPosition then
-            local direction = (playerPosition - localPlayerPosition).unit
-            local angle = math.acos(direction.X * camera.CFrame.lookVector.X + direction.Y * camera.CFrame.lookVector.Y + direction.Z * camera.CFrame.lookVector.Z) * (180 / math.pi)
-            return angle <= espFOV
-        end
-        return false
-    end
-
-    local function createESPLine(player)
-        local localPlayer = game:GetService("Players").LocalPlayer
-        local camera = workspace.CurrentCamera
-        local playerPosition = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
-        local localPlayerPosition = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character.HumanoidRootPart.Position
-        if playerPosition and localPlayerPosition then
-            local line = Drawing.new("Line")
-            line.Visible = true
-            line.Color = espLineColor
-            line.From = camera:WorldToViewportPoint(localPlayerPosition)
-            line.To = camera:WorldToViewportPoint(playerPosition)
-            return line
-        end
-        return nil
-    end
-
-    while true do
-        for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-            if player ~= game:GetService("Players").LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-                if isPlayerInESPFOV(player) then
-                    createESPLine(player)
-                end
-            end
-        end
-        wait(0.1)
-    end
-end)
-
-button3.MouseButton1Click:Connect(function()
-    game.Players.LocalPlayer:Kick("Redirecting to Discord Server: https://discord.gg/silentcaliber")
+-- Update ESP whenever a player leaves
+Players.PlayerRemoving:Connect(function(player)
+    updateESP()
 end)
